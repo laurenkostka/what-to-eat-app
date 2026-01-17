@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What to Eat Tonight?</title>
+    <!--
+        This is a single-file web app for deciding where to get takeout!
+        It uses the 5-2-1 decision method between two players (Lauren & Josh)
+    -->
+    <style>
+        /* ========== CSS VARIABLES ==========
+           These define our color palette - easy to change the whole theme!
+        */
+        :root {
+            --pink: #ff6b9d;
+            --purple: #c44cff;
+            --blue: #4cc9ff;
+            --yellow: #ffe34c;
+            --orange: #ff8c4c;
+            --green: #4cff8c;
+            --dark: #1a1a2e;
+            --light: #ffffff;
+        }
+
+        /* ========== BASE STYLES ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 50%, var(--orange) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        /* ========== MAIN CONTAINER ========== */
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* ========== HEADER STYLES ========== */
+        header {
+            text-align: center;
+            padding: 20px;
+            background: var(--dark);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--yellow);
+            text-shadow: 3px 3px 0 var(--pink);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--light);
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* ========== BUTTON STYLES ========== */
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--yellow), var(--orange));
+            color: var(--dark);
+            box-shadow: 0 5px 20px rgba(255, 227, 76, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 227, 76, 0.6);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--blue), var(--green));
+            color: var(--dark);
+            box-shadow: 0 5px 20px rgba(76, 201, 255, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4c4c, var(--pink));
+            color: var(--light);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        /* ========== GAME SCREENS ========== */
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========== START SCREEN ========== */
+        #start-screen {
+            text-align: center;
+        }
+
+        .start-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* ========== GAME INFO BAR ========== */
+        .game-info {
+            background: var(--dark);
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .player-indicator {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--yellow);
+        }
+
+        .phase-indicator {
+            background: var(--pink);
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: var(--light);
+            font-weight: bold;
+        }
+
+        .selection-count {
+            color: var(--light);
+            font-size: 0.9rem;
+        }
+
+        /* ========== RESTAURANT CARDS ========== */
+        .restaurant-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .restaurant-card {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .restaurant-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .restaurant-card.selected {
+            border-color: var(--green);
+            background: linear-gradient(135deg, #e8fff0, #d4ffe4);
+            transform: scale(1.02);
+        }
+
+        .restaurant-card.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .restaurant-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .restaurant-info {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .restaurant-cuisine {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--purple), var(--pink));
+            color: var(--light);
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-top: 8px;
+        }
+
+        /* ========== CONFIRM BUTTON ========== */
+        .confirm-section {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
+            background: var(--dark);
+            text-align: center;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+        }
+
+        .confirm-section.hidden {
+            display: none;
+        }
+
+        /* ========== WINNER SCREEN ========== */
+        #winner-screen {
+            text-align: center;
+        }
+
+        .winner-card {
+            background: var(--dark);
+            padding: 40px 30px;
+            border-radius: 25px;
+            margin: 20px 0;
+            animation: winnerPop 0.6s ease;
+        }
+
+        @keyframes winnerPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .winner-label {
+            font-size: 1.2rem;
+            color: var(--blue);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .winner-name {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--yellow);
+            text-shadow: 2px 2px 0 var(--pink);
+            margin-bottom: 10px;
+        }
+
+        .winner-details {
+            color: var(--light);
+            font-size: 1rem;
+        }
+
+        .confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            animation: confettiFall 3s ease-out forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* ========== MANAGE LIST SCREEN ========== */
+        #manage-screen {
+            padding-bottom: 80px;
+        }
+
+        .manage-header {
+            background: var(--dark);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+
+        .manage-title {
+            color: var(--yellow);
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        .add-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .add-form input, .add-form select {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .manage-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .manage-item {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .manage-item-info {
+            flex: 1;
+        }
+
+        .manage-item-name {
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        .manage-item-details {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .manage-item-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-icon {
+            width: 35px;
+            height: 35px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-edit {
+            background: var(--blue);
+            color: var(--dark);
+        }
+
+        .btn-delete {
+            background: #ff4c4c;
+            color: var(--light);
+        }
+
+        /* ========== FILTER TABS ========== */
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            background: var(--light);
+            color: var(--dark);
+            transition: all 0.3s ease;
+        }
+
+        .filter-tab.active {
+            background: var(--yellow);
+            font-weight: bold;
+        }
+
+        /* ========== BACK BUTTON ========== */
+        .back-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            max-width: 460px;
+            margin: 0 auto;
+        }
+
+        /* ========== EDIT MODAL ========== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--dark);
+            padding: 25px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .modal-title {
+            color: var(--yellow);
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-form input, .modal-form select {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .modal-buttons .btn {
+            flex: 1;
+        }
+
+        /* ========== RESPONSIVE ADJUSTMENTS ========== */
+        @media (min-width: 400px) {
+            .restaurant-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ========== HEADER ========== -->
+        <header>
+            <h1>🍕 What to Eat? 🌮</h1>
+            <p class="subtitle">The Ultimate Takeout Decider</p>
+        </header>
+
+        <!-- ========== START SCREEN ========== -->
+        <div id="start-screen" class="screen active">
+            <div class="start-buttons">
+                <button class="btn btn-primary" onclick="startGame()">
+                    🎲 Start New Game
+                </button>
+                <button class="btn btn-secondary" onclick="showManageScreen()">
+                    📝 Manage My List
+                </button>
+            </div>
+        </div>
+
+        <!-- ========== GAME SCREEN ========== -->
+        <div id="game-screen" class="screen">
+            <div class="game-info">
+                <span class="player-indicator" id="current-player"></span>
+                <span class="phase-indicator" id="phase-indicator"></span>
+                <span class="selection-count" id="selection-count"></span>
+            </div>
+            <div class="restaurant-grid" id="restaurant-grid"></div>
+        </div>
+
+        <!-- ========== WINNER SCREEN ========== -->
+        <div id="winner-screen" class="screen">
+            <div class="winner-card">
+                <div class="winner-label">🎉 Tonight You're Eating At 🎉</div>
+                <div class="winner-name" id="winner-name"></div>
+                <div class="winner-details" id="winner-details"></div>
+            </div>
+            <button class="btn btn-primary" onclick="startGame()">
+                🎲 Play Again
+            </button>
+            <button class="btn btn-secondary" onclick="showStartScreen()" style="margin-top: 10px;">
+                🏠 Home
+            </button>
+        </div>
+
+        <!-- ========== MANAGE LIST SCREEN ========== -->
+        <div id="manage-screen" class="screen">
+            <div class="manage-header">
+                <h2 class="manage-title">📝 Manage Restaurants</h2>
+                <div class="add-form">
+                    <input type="text" id="new-name" placeholder="Restaurant Name">
+                    <input type="text" id="new-cuisine" placeholder="Cuisine Type">
+                    <select id="new-location">
+                        <option value="Alameda">Alameda</option>
+                        <option value="Oakland">Oakland</option>
+                    </select>
+                    <button class="btn btn-primary btn-small" onclick="addRestaurant()">
+                        ➕ Add Restaurant
+                    </button>
+                </div>
+            </div>
+            <div class="filter-tabs" id="filter-tabs"></div>
+            <div class="manage-list" id="manage-list"></div>
+            <button class="btn btn-secondary back-btn" onclick="showStartScreen()">
+                ← Back to Home
+            </button>
+        </div>
+    </div>
+
+    <!-- ========== CONFIRM SELECTION BUTTON ========== -->
+    <div class="confirm-section hidden" id="confirm-section">
+        <button class="btn btn-primary" id="confirm-btn" onclick="confirmSelection()">
+            Confirm Selection
+        </button>
+    </div>
+
+    <!-- ========== EDIT MODAL ========== -->
+    <div class="modal" id="edit-modal">
+        <div class="modal-content">
+            <h3 class="modal-title">✏️ Edit Restaurant</h3>
+            <div class="modal-form">
+                <input type="text" id="edit-name" placeholder="Restaurant Name">
+                <input type="text" id="edit-cuisine" placeholder="Cuisine Type">
+                <select id="edit-location">
+                    <option value="Alameda">Alameda</option>
+                    <option value="Oakland">Oakland</option>
+                </select>
+                <input type="hidden" id="edit-index">
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary btn-small" onclick="closeEditModal()">
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary btn-small" onclick="saveEdit()">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== CONFETTI CONTAINER ========== -->
+    <div class="confetti" id="confetti"></div>
+
+    <script>
+        /* ==========================================================
+           JAVASCRIPT - This is where all the logic lives!
+           ========================================================== */
+
+        // ========== DEFAULT RESTAURANT DATA ==========
+        // This is your original list of 38 restaurants
+        const DEFAULT_RESTAURANTS = [
+            // Alameda restaurants
+            { name: "Bhan Mae Vane", cuisine: "Thai / Lao", location: "Alameda" },
+            { name: "The Star on Park", cuisine: "Pizza", location: "Alameda" },
+            { name: "Pizzeria Pappo", cuisine: "Pizza", location: "Alameda" },
+            { name: "Mountain Mike's Pizza", cuisine: "Pizza", location: "Alameda" },
+            { name: "Pasta Pelican", cuisine: "Italian", location: "Alameda" },
+            { name: "Cholita Linda", cuisine: "Latin American", location: "Alameda" },
+            { name: "Sidestreet Pho", cuisine: "Vietnamese", location: "Alameda" },
+            { name: "Little Joe's Express", cuisine: "Chinese", location: "Alameda" },
+            { name: "Hong Kong City Restaurant", cuisine: "Chinese", location: "Alameda" },
+            { name: "Marugame Udon", cuisine: "Japanese", location: "Alameda" },
+            { name: "Southern Comfort Kitchen", cuisine: "Southern / American", location: "Alameda" },
+            { name: "Taco Fino Express", cuisine: "Mexican", location: "Alameda" },
+            { name: "Jollibee", cuisine: "Filipino Fast Food", location: "Alameda" },
+            { name: "La Val's Pizza", cuisine: "Pizza", location: "Alameda" },
+            { name: "Sachi Sushi", cuisine: "Sushi / Japanese", location: "Alameda" },
+            { name: "Calafia Taqueria", cuisine: "Mexican", location: "Alameda" },
+            { name: "Pho Nation Express", cuisine: "Vietnamese", location: "Alameda" },
+            { name: "Kokolo Donburi & Grill", cuisine: "Japanese", location: "Alameda" },
+            // Oakland restaurants
+            { name: "Zachary's Chicago Pizza", cuisine: "Deep-Dish Pizza", location: "Oakland" },
+            { name: "Homeroom", cuisine: "American (Mac & Cheese)", location: "Oakland" },
+            { name: "Belotti Bottega", cuisine: "Italian", location: "Oakland" },
+            { name: "Mesa Maguey", cuisine: "Oaxacan Mexican", location: "Oakland" },
+            { name: "Smokin Woods BBQ", cuisine: "Barbecue", location: "Oakland" },
+            { name: "Limón", cuisine: "Peruvian", location: "Oakland" },
+            { name: "Kitava", cuisine: "Health-Focused / Paleo", location: "Oakland" },
+            { name: "To the Moon", cuisine: "Korean-Inspired", location: "Oakland" },
+            { name: "Daytrip Counter", cuisine: "Rotisserie Chicken / American", location: "Oakland" },
+            { name: "alaMar Dominican Kitchen", cuisine: "Dominican / Caribbean", location: "Oakland" },
+            { name: "Saturn Cafe", cuisine: "Vegetarian / Vegan", location: "Oakland" },
+            { name: "Curry Up Now", cuisine: "Indian Street Food", location: "Oakland" },
+            { name: "Hummus Republic", cuisine: "Mediterranean", location: "Oakland" },
+            { name: "Happy Burrito", cuisine: "Mexican", location: "Oakland" },
+            { name: "Maya Halal Taqueria", cuisine: "Halal Mexican", location: "Oakland" },
+            { name: "Shan Dong", cuisine: "Chinese", location: "Oakland" },
+            { name: "Pho Vy", cuisine: "Vietnamese", location: "Oakland" },
+            { name: "Bangkok Garden", cuisine: "Thai", location: "Oakland" },
+            { name: "Firebrand Artisan Breads", cuisine: "Bakery / Sandwiches", location: "Oakland" },
+            { name: "TrueBurger", cuisine: "Burgers", location: "Oakland" }
+        ];
+
+        // ========== GAME STATE ==========
+        // These variables track the current state of the game
+        let restaurants = [];           // Full list of all restaurants
+        let gameRestaurants = [];       // The 20 randomly selected for this game
+        let currentPhase = 0;           // 0=pick 5, 1=pick 2, 2=pick 1
+        let player1 = "";               // Randomly assigned at start
+        let player2 = "";
+        let currentPlayer = "";
+        let selectedRestaurants = [];   // Currently selected in this phase
+        let phase1Selections = [];      // The 5 selected in phase 1
+        let phase2Selections = [];      // The 2 selected in phase 2
+        let currentFilter = "All";      // For manage screen filtering
+
+        // ========== INITIALIZATION ==========
+        // This runs when the page loads
+        function init() {
+            // Load restaurants from localStorage, or use defaults if none saved
+            const saved = localStorage.getItem('restaurants');
+            if (saved) {
+                restaurants = JSON.parse(saved);
+            } else {
+                restaurants = [...DEFAULT_RESTAURANTS];
+                saveRestaurants();
+            }
+        }
+
+        // Save restaurants to localStorage (browser storage)
+        function saveRestaurants() {
+            localStorage.setItem('restaurants', JSON.stringify(restaurants));
+        }
+
+        // ========== SCREEN NAVIGATION ==========
+        // These functions show/hide different screens
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            document.getElementById('confirm-section').classList.add('hidden');
+        }
+
+        function showStartScreen() {
+            showScreen('start-screen');
+        }
+
+        function showManageScreen() {
+            showScreen('manage-screen');
+            renderFilterTabs();
+            renderManageList();
+        }
+
+        // ========== GAME LOGIC ==========
+
+        // Start a new game
+        function startGame() {
+            // Randomly pick who goes first
+            if (Math.random() < 0.5) {
+                player1 = "Lauren";
+                player2 = "Josh";
+            } else {
+                player1 = "Josh";
+                player2 = "Lauren";
+            }
+
+            // Randomly select 20 restaurants from the full list
+            // We use the Fisher-Yates shuffle algorithm
+            const shuffled = [...restaurants].sort(() => Math.random() - 0.5);
+            gameRestaurants = shuffled.slice(0, Math.min(20, shuffled.length));
+
+            // Reset game state
+            currentPhase = 0;
+            currentPlayer = player1;
+            selectedRestaurants = [];
+            phase1Selections = [];
+            phase2Selections = [];
+
+            // Show the game screen
+            showScreen('game-screen');
+            renderGame();
+        }
+
+        // Render the current game state
+        function renderGame() {
+            // Update the info bar at the top
+            document.getElementById('current-player').textContent = `${currentPlayer}'s Turn`;
+
+            // Determine what restaurants to show based on the phase
+            let restaurantsToShow = [];
+            let requiredSelections = 0;
+            let phaseText = "";
+
+            if (currentPhase === 0) {
+                // Phase 1: Player 1 picks 5 from 20
+                restaurantsToShow = gameRestaurants;
+                requiredSelections = 5;
+                phaseText = "Pick 5";
+            } else if (currentPhase === 1) {
+                // Phase 2: Player 2 picks 2 from the 5
+                restaurantsToShow = phase1Selections;
+                requiredSelections = 2;
+                phaseText = "Pick 2";
+            } else if (currentPhase === 2) {
+                // Phase 3: Player 1 picks the winner from the 2
+                restaurantsToShow = phase2Selections;
+                requiredSelections = 1;
+                phaseText = "Pick the Winner!";
+            }
+
+            document.getElementById('phase-indicator').textContent = phaseText;
+            document.getElementById('selection-count').textContent =
+                `Selected: ${selectedRestaurants.length}/${requiredSelections}`;
+
+            // Render the restaurant cards
+            const grid = document.getElementById('restaurant-grid');
+            grid.innerHTML = restaurantsToShow.map((r, index) => {
+                const isSelected = selectedRestaurants.includes(index);
+                const isDisabled = !isSelected && selectedRestaurants.length >= requiredSelections;
+                return `
+                    <div class="restaurant-card ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}"
+                         onclick="toggleSelection(${index}, ${requiredSelections})">
+                        <div class="restaurant-name">${r.name}</div>
+                        <div class="restaurant-info">${r.location}</div>
+                        <span class="restaurant-cuisine">${r.cuisine}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Show/hide confirm button
+            const confirmSection = document.getElementById('confirm-section');
+            if (selectedRestaurants.length === requiredSelections) {
+                confirmSection.classList.remove('hidden');
+                document.getElementById('confirm-btn').textContent =
+                    currentPhase === 2 ? "🎉 Reveal Winner!" : "✓ Confirm Selection";
+            } else {
+                confirmSection.classList.add('hidden');
+            }
+        }
+
+        // Toggle a restaurant selection
+        function toggleSelection(index, maxSelections) {
+            const pos = selectedRestaurants.indexOf(index);
+            if (pos > -1) {
+                // Already selected, remove it
+                selectedRestaurants.splice(pos, 1);
+            } else if (selectedRestaurants.length < maxSelections) {
+                // Not selected and we haven't hit the max, add it
+                selectedRestaurants.push(index);
+            }
+            renderGame();
+        }
+
+        // Confirm the current selection and move to next phase
+        function confirmSelection() {
+            if (currentPhase === 0) {
+                // Save phase 1 selections (the 5 picks)
+                phase1Selections = selectedRestaurants.map(i => gameRestaurants[i]);
+                currentPlayer = player2; // Switch to player 2
+                currentPhase = 1;
+                selectedRestaurants = [];
+                renderGame();
+            } else if (currentPhase === 1) {
+                // Save phase 2 selections (the 2 picks)
+                phase2Selections = selectedRestaurants.map(i => phase1Selections[i]);
+                currentPlayer = player1; // Back to player 1
+                currentPhase = 2;
+                selectedRestaurants = [];
+                renderGame();
+            } else if (currentPhase === 2) {
+                // We have a winner!
+                const winner = phase2Selections[selectedRestaurants[0]];
+                showWinner(winner);
+            }
+        }
+
+        // Show the winner screen with celebration
+        function showWinner(winner) {
+            showScreen('winner-screen');
+            document.getElementById('winner-name').textContent = winner.name;
+            document.getElementById('winner-details').textContent =
+                `${winner.cuisine} • ${winner.location}`;
+
+            // Trigger confetti celebration!
+            createConfetti();
+        }
+
+        // Create confetti animation
+        function createConfetti() {
+            const container = document.getElementById('confetti');
+            container.innerHTML = '';
+
+            const colors = ['#ff6b9d', '#c44cff', '#4cc9ff', '#ffe34c', '#ff8c4c', '#4cff8c'];
+
+            for (let i = 0; i < 50; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = Math.random() * 100 + '%';
+                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.animationDelay = Math.random() * 2 + 's';
+                piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                container.appendChild(piece);
+            }
+
+            // Clean up confetti after animation
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // ========== MANAGE LIST FUNCTIONS ==========
+
+        // Get unique locations for filter tabs
+        function getLocations() {
+            const locations = new Set(restaurants.map(r => r.location));
+            return ['All', ...Array.from(locations).sort()];
+        }
+
+        // Render filter tabs
+        function renderFilterTabs() {
+            const tabs = document.getElementById('filter-tabs');
+            const locations = getLocations();
+            tabs.innerHTML = locations.map(loc => `
+                <button class="filter-tab ${currentFilter === loc ? 'active' : ''}"
+                        onclick="setFilter('${loc}')">
+                    ${loc}
+                </button>
+            `).join('');
+        }
+
+        // Set current filter
+        function setFilter(location) {
+            currentFilter = location;
+            renderFilterTabs();
+            renderManageList();
+        }
+
+        // Render the manage list
+        function renderManageList() {
+            const list = document.getElementById('manage-list');
+            const filtered = currentFilter === 'All'
+                ? restaurants
+                : restaurants.filter(r => r.location === currentFilter);
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<p style="color: white; text-align: center;">No restaurants found. Add some!</p>';
+                return;
+            }
+
+            list.innerHTML = filtered.map((r, filteredIndex) => {
+                // Find the actual index in the full array
+                const actualIndex = restaurants.indexOf(r);
+                return `
+                    <div class="manage-item">
+                        <div class="manage-item-info">
+                            <div class="manage-item-name">${r.name}</div>
+                            <div class="manage-item-details">${r.cuisine} • ${r.location}</div>
+                        </div>
+                        <div class="manage-item-actions">
+                            <button class="btn-icon btn-edit" onclick="openEditModal(${actualIndex})">✏️</button>
+                            <button class="btn-icon btn-delete" onclick="deleteRestaurant(${actualIndex})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Add a new restaurant
+        function addRestaurant() {
+            const name = document.getElementById('new-name').value.trim();
+            const cuisine = document.getElementById('new-cuisine').value.trim();
+            const location = document.getElementById('new-location').value;
+
+            if (!name || !cuisine) {
+                alert('Please fill in both name and cuisine!');
+                return;
+            }
+
+            restaurants.push({ name, cuisine, location });
+            saveRestaurants();
+
+            // Clear the form
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-cuisine').value = '';
+
+            renderFilterTabs();
+            renderManageList();
+        }
+
+        // Delete a restaurant
+        function deleteRestaurant(index) {
+            if (confirm(`Are you sure you want to remove "${restaurants[index].name}"?`)) {
+                restaurants.splice(index, 1);
+                saveRestaurants();
+                renderFilterTabs();
+                renderManageList();
+            }
+        }
+
+        // Open edit modal
+        function openEditModal(index) {
+            const r = restaurants[index];
+            document.getElementById('edit-name').value = r.name;
+            document.getElementById('edit-cuisine').value = r.cuisine;
+            document.getElementById('edit-location').value = r.location;
+            document.getElementById('edit-index').value = index;
+            document.getElementById('edit-modal').classList.add('active');
+        }
+
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+        }
+
+        // Save edit
+        function saveEdit() {
+            const index = parseInt(document.getElementById('edit-index').value);
+            const name = document.getElementById('edit-name').value.trim();
+            const cuisine = document.getElementById('edit-cuisine').value.trim();
+            const location = document.getElementById('edit-location').value;
+
+            if (!name || !cuisine) {
+                alert('Please fill in both name and cuisine!');
+                return;
+            }
+
+            restaurants[index] = { name, cuisine, location };
+            saveRestaurants();
+            closeEditModal();
+            renderManageList();
+        }
+
+        // Initialize the app when page loads
+        init();
+    </script>
+</body>
+</html>
