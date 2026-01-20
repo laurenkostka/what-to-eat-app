@@ -3,28 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>What to Eat Tonight?</title>
-    <!--
-        This is a single-file web app for deciding where to get takeout!
-        It uses the 5-2-1 decision method between two players (Lauren & Josh)
-        Neon Izakaya Theme - Dark moody aesthetic with glowing neon signs
-    -->
+    <title>Dinner Decider</title>
     <style>
         /* ========== CSS VARIABLES ==========
-           Warm Tokyo Alley color palette
+           Professional Tokyo Night Palette
         */
         :root {
-            --neon-pink: #FF1493;
-            --neon-red: #FF4500;
-            --neon-orange: #FF6B35;
-            --neon-cyan: #4DD9E8;
-            --neon-amber: #FFB347;
-            --dark-bg: #000000;
-            --dark-surface: rgba(10, 10, 10, 0.85);
-            --dark-card: rgba(17, 17, 17, 0.9);
-            --light: #ffffff;
-            --josh-color: #4DD9E8;
-            --lauren-color: #FF1493;
+            --bg-primary: #0F1419;
+            --bg-secondary: #1A1F26;
+            --bg-card: #1E252E;
+            --bg-card-hover: #252D38;
+            --accent: #FF1493;
+            --accent-hover: #FF3DA5;
+            --accent-muted: rgba(255, 20, 147, 0.15);
+            --text-primary: #F5F5F5;
+            --text-secondary: #9CA3AF;
+            --text-muted: #6B7280;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-accent: rgba(255, 20, 147, 0.4);
+            --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --player1-color: #FF1493;
+            --player2-color: #4DD9E8;
+
+            /* Cuisine accent colors - bold & vibrant */
+            --cuisine-italian: #E63946;
+            --cuisine-japanese: #FF006E;
+            --cuisine-mexican: #FF6B35;
+            --cuisine-chinese: #FFD700;
+            --cuisine-thai: #9D4EDD;
+            --cuisine-vietnamese: #06FFA5;
+            --cuisine-american: #0096FF;
+            --cuisine-bbq: #FF4500;
+            --cuisine-indian: #FF6F00;
+            --cuisine-mediterranean: #06D6A0;
+            --cuisine-korean: #F72585;
+            --cuisine-caribbean: #ADFF2F;
+            --cuisine-default: #6B7280;
         }
 
         /* ========== BASE STYLES ========== */
@@ -35,15 +50,17 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--dark-bg);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
             min-height: 100vh;
             padding: 20px;
-            padding-bottom: 120px;
+            padding-bottom: 140px;
             position: relative;
+            line-height: 1.5;
+            color: var(--text-primary);
         }
 
-        /* Tokyo alley background image - dimmed for gameplay */
+        /* Tokyo-inspired gradient background */
         body::before {
             content: '';
             position: fixed;
@@ -51,27 +68,11 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('alley.png') center center / cover no-repeat;
-            opacity: 0.25;
-            pointer-events: none;
-            z-index: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        /* Dark overlay for better text readability */
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(
-                to bottom,
-                rgba(0, 0, 0, 0.3) 0%,
-                rgba(0, 0, 0, 0.1) 50%,
-                rgba(0, 0, 0, 0.4) 100%
-            );
+            background:
+                radial-gradient(ellipse at 20% 0%, rgba(255, 107, 53, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 10%, rgba(255, 20, 147, 0.06) 0%, transparent 40%),
+                radial-gradient(ellipse at 50% 100%, rgba(77, 217, 232, 0.04) 0%, transparent 50%),
+                linear-gradient(180deg, #0F1419 0%, #131921 50%, #0F1419 100%);
             pointer-events: none;
             z-index: 0;
         }
@@ -87,102 +88,105 @@
         /* ========== HEADER STYLES ========== */
         header {
             text-align: center;
-            padding: 25px 20px;
-            background: var(--dark-surface);
-            border-radius: 15px;
+            padding: 24px 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
             margin-bottom: 20px;
-            border: 1px solid rgba(255, 69, 0, 0.3);
-            box-shadow:
-                0 0 20px rgba(255, 69, 0, 0.2),
-                inset 0 0 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-subtle);
         }
 
         h1 {
-            font-size: 1.8rem;
-            color: var(--neon-orange);
-            text-shadow:
-                0 0 5px rgba(255, 107, 53, 0.6),
-                0 0 15px rgba(255, 107, 53, 0.4);
-            margin-bottom: 10px;
-            letter-spacing: 2px;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
         }
 
         .subtitle {
-            color: var(--neon-amber);
-            font-size: 0.9rem;
-            text-shadow:
-                0 0 5px rgba(255, 179, 71, 0.5);
-            letter-spacing: 3px;
-            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 400;
+            font-style: italic;
         }
 
         /* ========== BUTTON STYLES ========== */
         .btn {
-            padding: 15px 30px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border: 2px solid;
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            background: transparent;
-            position: relative;
+            transition: all 0.2s ease;
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .btn-primary {
-            border-color: var(--neon-orange);
-            color: var(--neon-orange);
-            text-shadow: 0 0 8px rgba(255, 107, 53, 0.5);
-            box-shadow:
-                0 0 8px rgba(255, 107, 53, 0.4),
-                inset 0 0 8px rgba(255, 107, 53, 0.1);
+            background: var(--accent);
+            color: white;
         }
 
         .btn-primary:hover:not(:disabled) {
-            background: rgba(255, 107, 53, 0.2);
-            box-shadow:
-                0 0 20px rgba(255, 107, 53, 0.8),
-                0 0 40px rgba(255, 107, 53, 0.4),
-                inset 0 0 20px rgba(255, 107, 53, 0.2);
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
         }
 
         .btn-primary:disabled {
-            border-color: #333;
-            color: #444;
-            text-shadow: none;
-            box-shadow: none;
-            cursor: not-allowed;
+            background: var(--accent);
             opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .btn-secondary {
-            border-color: var(--neon-cyan);
-            color: var(--neon-cyan);
-            text-shadow: 0 0 8px rgba(77, 217, 232, 0.5);
-            box-shadow:
-                0 0 8px rgba(77, 217, 232, 0.4),
-                inset 0 0 8px rgba(77, 217, 232, 0.1);
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
         }
 
-        .btn-secondary:hover {
-            background: rgba(77, 217, 232, 0.2);
-            box-shadow:
-                0 0 20px rgba(77, 217, 232, 0.8),
-                0 0 40px rgba(77, 217, 232, 0.4),
-                inset 0 0 20px rgba(77, 217, 232, 0.2);
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--bg-card);
+            border-color: rgba(255, 255, 255, 0.15);
         }
 
-        .btn-danger {
-            border-color: var(--neon-red);
-            color: var(--neon-red);
-            text-shadow: 0 0 8px rgba(255, 69, 0, 0.5);
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 12px 20px;
         }
 
-        .btn-small {
-            padding: 10px 20px;
-            font-size: 0.85rem;
+        .btn-ghost:hover {
+            color: var(--text-primary);
+            background: var(--bg-card);
+        }
+
+        /* Loading state */
+        .btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .btn.loading::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         /* ========== GAME SCREENS ========== */
@@ -192,93 +196,255 @@
 
         .screen.active {
             display: block;
-            animation: fadeIn 0.5s ease;
+            animation: fadeIn 0.3s ease;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ========== START SCREEN ========== */
-        #start-screen {
+        /* ========== INSTRUCTIONS SCREEN ========== */
+        #instructions-screen {
             text-align: center;
         }
 
-        .start-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+        .instructions-card {
+            background: var(--bg-secondary);
+            padding: 32px 24px;
+            border-radius: 12px;
             margin-top: 20px;
+            border: 1px solid var(--border-subtle);
         }
 
-        /* ========== PLAYER NAME DISPLAY ========== */
-        .player-turn-display {
+        .instructions-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+        }
+
+        .instructions-list {
+            text-align: left;
+            list-style: none;
+            margin-bottom: 28px;
+        }
+
+        .instructions-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .instructions-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-number {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            background: var(--accent-muted);
+            color: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .instructions-button {
+            width: 100%;
+        }
+
+        /* ========== LOCATION SCREEN ========== */
+        #location-screen {
             text-align: center;
-            padding: 30px 20px;
-            margin-bottom: 20px;
         }
 
-        .player-name-large {
-            font-size: 2.5rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            animation: neonPulse 2s ease-in-out infinite;
+        .location-form {
+            background: var(--bg-secondary);
+            padding: 24px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 1px solid var(--border-subtle);
         }
 
-        .player-name-large.josh {
-            color: var(--josh-color);
-            text-shadow:
-                0 0 10px rgba(77, 217, 232, 0.6),
-                0 0 30px rgba(77, 217, 232, 0.3);
+        .form-group {
+            margin-bottom: 24px;
+            text-align: left;
         }
 
-        .player-name-large.lauren {
-            color: var(--lauren-color);
-            text-shadow:
-                0 0 10px rgba(255, 20, 147, 0.6),
-                0 0 30px rgba(255, 20, 147, 0.3);
-        }
-
-        .turn-label {
-            font-size: 1rem;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 3px;
+        .form-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
             margin-bottom: 10px;
         }
 
-        @keyframes neonPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
+        .location-input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .location-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-muted);
+        }
+
+        .location-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* ========== DISTANCE SLIDER ========== */
+        .slider-value {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .distance-slider {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--bg-card);
+            border-radius: 3px;
+            outline: none;
+            margin-top: 12px;
+        }
+
+        .distance-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .distance-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .distance-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .distance-slider::-webkit-slider-runnable-track {
+            background: linear-gradient(to right,
+                var(--accent) 0%,
+                var(--accent) var(--slider-percent, 16.67%),
+                var(--bg-card) var(--slider-percent, 16.67%),
+                var(--bg-card) 100%
+            );
+            border-radius: 3px;
+            height: 6px;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .location-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        /* Error message */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #F87171;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 0.875rem;
+            display: none;
+            text-align: left;
+        }
+
+        .error-message.visible {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        /* ========== PLAYER TURN DISPLAY ========== */
+        .player-turn-display {
+            text-align: center;
+            padding: 24px 20px;
+            margin-bottom: 16px;
+        }
+
+        .turn-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .player-name-large {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .player-name-large.player1 {
+            color: var(--player1-color);
+        }
+
+        .player-name-large.player2 {
+            color: var(--player2-color);
         }
 
         /* ========== GAME INFO BAR ========== */
         .game-info {
-            background: var(--dark-surface);
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            background: var(--bg-secondary);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
-            border: 1px solid rgba(255, 107, 53, 0.2);
+            border: 1px solid var(--border-subtle);
         }
 
         .phase-indicator {
-            background: transparent;
-            padding: 8px 20px;
-            border-radius: 5px;
-            color: var(--neon-amber);
-            font-weight: bold;
-            font-size: 1.1rem;
-            text-shadow: 0 0 8px rgba(255, 179, 71, 0.5);
-            letter-spacing: 2px;
-            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.9rem;
         }
 
-        /* ========== RESTAURANT CARDS - NEON LANTERN STYLE ========== */
+        /* ========== RESTAURANT CARDS ========== */
         .restaurant-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -286,22 +452,20 @@
         }
 
         .restaurant-card {
-            background: var(--dark-card);
-            padding: 18px 15px;
-            border-radius: 12px;
+            background: var(--bg-card);
+            padding: 16px 14px;
+            padding-left: 18px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid rgba(255, 69, 0, 0.3);
-            box-shadow:
-                0 0 15px rgba(255, 69, 0, 0.2),
-                inset 0 0 20px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-subtle);
+            border-left: 4px solid var(--cuisine-default);
             display: flex;
             flex-direction: column;
             min-height: 140px;
             position: relative;
-            overflow: hidden;
             opacity: 0;
-            animation: cardFadeIn 0.4s ease forwards;
+            animation: cardFadeIn 0.3s ease forwards;
         }
 
         .restaurant-card.loaded {
@@ -309,126 +473,143 @@
             animation: none;
         }
 
-        .restaurant-card:nth-child(1) { animation-delay: 0.05s; }
-        .restaurant-card:nth-child(2) { animation-delay: 0.1s; }
-        .restaurant-card:nth-child(3) { animation-delay: 0.15s; }
-        .restaurant-card:nth-child(4) { animation-delay: 0.2s; }
-        .restaurant-card:nth-child(5) { animation-delay: 0.25s; }
-        .restaurant-card:nth-child(6) { animation-delay: 0.3s; }
-        .restaurant-card:nth-child(7) { animation-delay: 0.35s; }
-        .restaurant-card:nth-child(8) { animation-delay: 0.4s; }
-        .restaurant-card:nth-child(9) { animation-delay: 0.45s; }
-        .restaurant-card:nth-child(10) { animation-delay: 0.5s; }
-        .restaurant-card:nth-child(11) { animation-delay: 0.55s; }
-        .restaurant-card:nth-child(12) { animation-delay: 0.6s; }
-        .restaurant-card:nth-child(13) { animation-delay: 0.65s; }
-        .restaurant-card:nth-child(14) { animation-delay: 0.7s; }
-        .restaurant-card:nth-child(15) { animation-delay: 0.75s; }
-        .restaurant-card:nth-child(16) { animation-delay: 0.8s; }
-        .restaurant-card:nth-child(17) { animation-delay: 0.85s; }
-        .restaurant-card:nth-child(18) { animation-delay: 0.9s; }
-        .restaurant-card:nth-child(19) { animation-delay: 0.95s; }
-        .restaurant-card:nth-child(20) { animation-delay: 1s; }
+        /* Staggered animation delays */
+        .restaurant-card:nth-child(1) { animation-delay: 0.02s; }
+        .restaurant-card:nth-child(2) { animation-delay: 0.04s; }
+        .restaurant-card:nth-child(3) { animation-delay: 0.06s; }
+        .restaurant-card:nth-child(4) { animation-delay: 0.08s; }
+        .restaurant-card:nth-child(5) { animation-delay: 0.1s; }
+        .restaurant-card:nth-child(6) { animation-delay: 0.12s; }
+        .restaurant-card:nth-child(7) { animation-delay: 0.14s; }
+        .restaurant-card:nth-child(8) { animation-delay: 0.16s; }
+        .restaurant-card:nth-child(9) { animation-delay: 0.18s; }
+        .restaurant-card:nth-child(10) { animation-delay: 0.2s; }
+        .restaurant-card:nth-child(11) { animation-delay: 0.22s; }
+        .restaurant-card:nth-child(12) { animation-delay: 0.24s; }
+        .restaurant-card:nth-child(13) { animation-delay: 0.26s; }
+        .restaurant-card:nth-child(14) { animation-delay: 0.28s; }
+        .restaurant-card:nth-child(15) { animation-delay: 0.3s; }
+        .restaurant-card:nth-child(16) { animation-delay: 0.32s; }
+        .restaurant-card:nth-child(17) { animation-delay: 0.34s; }
+        .restaurant-card:nth-child(18) { animation-delay: 0.36s; }
+        .restaurant-card:nth-child(19) { animation-delay: 0.38s; }
+        .restaurant-card:nth-child(20) { animation-delay: 0.4s; }
 
         @keyframes cardFadeIn {
             from {
                 opacity: 0;
-                transform: translateY(20px) scale(0.95);
+                transform: translateY(8px);
             }
             to {
                 opacity: 1;
-                transform: translateY(0) scale(1);
+                transform: translateY(0);
             }
         }
 
-        /* Lantern hanging effect - top glow */
-        .restaurant-card::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 30px;
-            height: 4px;
-            background: var(--neon-red);
-            border-radius: 2px;
-            box-shadow: 0 0 10px rgba(255, 69, 0, 0.8);
-        }
-
         .restaurant-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--neon-orange);
-            box-shadow:
-                0 0 25px rgba(255, 107, 53, 0.4),
-                0 0 50px rgba(255, 107, 53, 0.2),
-                inset 0 0 20px rgba(255, 107, 53, 0.1);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.15);
         }
 
         .restaurant-card.selected {
-            border-color: var(--neon-cyan);
-            background: rgba(77, 217, 232, 0.1);
-            box-shadow:
-                0 0 30px rgba(77, 217, 232, 0.6),
-                0 0 60px rgba(77, 217, 232, 0.3),
-                inset 0 0 30px rgba(77, 217, 232, 0.2);
+            border-color: var(--accent);
+            background: var(--accent-muted);
+            box-shadow: 0 0 0 1px var(--accent);
         }
 
-        .restaurant-card.selected::before {
-            background: var(--neon-cyan);
-            box-shadow: 0 0 15px rgba(77, 217, 232, 0.8);
+        .restaurant-card.selected:hover {
+            background: rgba(255, 20, 147, 0.2);
         }
 
         .restaurant-card.disabled {
-            opacity: 0.3;
+            opacity: 0.4;
             pointer-events: none;
-            filter: grayscale(0.5);
         }
 
-        /* Info hierarchy: Cuisine > Name > Location */
-        .restaurant-cuisine {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--neon-pink);
-            text-shadow: 0 0 8px rgba(255, 20, 147, 0.4);
+        /* Cuisine icon */
+        .cuisine-icon {
+            font-size: 1.5rem;
             margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            line-height: 1.2;
+            line-height: 1;
         }
 
+        /* Info hierarchy: Name > Cuisine > Location */
         .restaurant-name {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--light);
-            margin-bottom: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
             line-height: 1.3;
             flex-grow: 1;
         }
 
+        .restaurant-cuisine {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
         .restaurant-location {
-            font-size: 0.75rem;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* Cuisine color accents - vibrant left border */
+        .restaurant-card[data-cuisine-type="italian"] {
+            border-left-color: var(--cuisine-italian);
+        }
+        .restaurant-card[data-cuisine-type="japanese"] {
+            border-left-color: var(--cuisine-japanese);
+        }
+        .restaurant-card[data-cuisine-type="mexican"] {
+            border-left-color: var(--cuisine-mexican);
+        }
+        .restaurant-card[data-cuisine-type="chinese"] {
+            border-left-color: var(--cuisine-chinese);
+        }
+        .restaurant-card[data-cuisine-type="thai"] {
+            border-left-color: var(--cuisine-thai);
+        }
+        .restaurant-card[data-cuisine-type="american"] {
+            border-left-color: var(--cuisine-american);
+        }
+        .restaurant-card[data-cuisine-type="bbq"] {
+            border-left-color: var(--cuisine-bbq);
+        }
+        .restaurant-card[data-cuisine-type="vietnamese"] {
+            border-left-color: var(--cuisine-vietnamese);
+        }
+        .restaurant-card[data-cuisine-type="mediterranean"] {
+            border-left-color: var(--cuisine-mediterranean);
+        }
+        .restaurant-card[data-cuisine-type="indian"] {
+            border-left-color: var(--cuisine-indian);
+        }
+        .restaurant-card[data-cuisine-type="korean"] {
+            border-left-color: var(--cuisine-korean);
+        }
+        .restaurant-card[data-cuisine-type="caribbean"] {
+            border-left-color: var(--cuisine-caribbean);
         }
 
         /* ========== FIXED BOTTOM CONFIRMATION BAR ========== */
         .confirm-section {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 15px 20px;
-            background: var(--dark-surface);
-            border-top: 1px solid rgba(255, 107, 53, 0.3);
-            box-shadow:
-                0 -5px 30px rgba(0, 0, 0, 0.8),
-                0 0 20px rgba(255, 107, 53, 0.1);
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-elevated);
             z-index: 100;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         .confirm-section.hidden {
@@ -436,19 +617,16 @@
         }
 
         .selection-status {
-            color: #888;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-size: 0.875rem;
         }
 
         .selection-status.complete {
-            color: var(--neon-cyan);
-            text-shadow: 0 0 8px rgba(77, 217, 232, 0.5);
+            color: var(--accent);
         }
 
         #confirm-btn {
             width: 100%;
-            max-width: 400px;
         }
 
         /* ========== WINNER SCREEN ========== */
@@ -459,7 +637,6 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: transparent;
             z-index: 2000;
             display: none;
             flex-direction: column;
@@ -468,7 +645,7 @@
             padding: 20px;
         }
 
-        /* Bright alley background for winner screen */
+        /* Gradient background for winner screen */
         #winner-screen::before {
             content: '';
             position: absolute;
@@ -476,30 +653,17 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('alley.png') center center / cover no-repeat;
-            opacity: 0;
-            z-index: -2;
-            animation: winnerBgFadeIn 1s ease 0.5s forwards;
-        }
-
-        /* Subtle dark overlay for winner screen */
-        #winner-screen::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
+            background:
+                radial-gradient(ellipse at 50% 30%, rgba(255, 20, 147, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 30% 70%, rgba(255, 107, 53, 0.08) 0%, transparent 40%),
+                radial-gradient(ellipse at 70% 80%, rgba(77, 217, 232, 0.06) 0%, transparent 40%),
+                var(--bg-primary);
             z-index: -1;
-        }
-
-        @keyframes winnerBgFadeIn {
-            to { opacity: 0.75; }
         }
 
         #winner-screen.active {
             display: flex;
+            animation: fadeIn 0.5s ease;
         }
 
         .winner-card {
@@ -509,148 +673,70 @@
             width: 100%;
         }
 
-        .winner-label {
-            font-size: 1rem;
-            color: var(--neon-amber);
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            text-shadow: 0 0 8px rgba(255, 179, 71, 0.6);
+        .winner-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
             opacity: 0;
-            animation: labelFadeIn 0.5s ease 2s forwards;
+            animation: fadeInUp 0.5s ease 0.2s forwards;
         }
 
-        @keyframes labelFadeIn {
-            to { opacity: 1; }
+        .winner-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            opacity: 0;
+            animation: fadeInUp 0.5s ease 0.3s forwards;
         }
 
         .winner-name {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--neon-pink);
-            margin-bottom: 15px;
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 12px;
             line-height: 1.2;
+            opacity: 0;
+            animation: winnerReveal 0.8s ease 0.5s forwards;
         }
 
-        .winner-name.flicker {
-            animation: neonFlickerOn 2s ease-out forwards;
-        }
-
-        @keyframes neonFlickerOn {
+        @keyframes winnerReveal {
             0% {
                 opacity: 0;
-                text-shadow: none;
-            }
-            10% {
-                opacity: 0.3;
-                text-shadow: 0 0 2px rgba(255, 20, 147, 0.4);
-            }
-            15% {
-                opacity: 0;
-                text-shadow: none;
-            }
-            25% {
-                opacity: 0.5;
-                text-shadow: 0 0 5px rgba(255, 20, 147, 0.5);
-            }
-            30% {
-                opacity: 0.2;
-                text-shadow: 0 0 2px rgba(255, 20, 147, 0.3);
-            }
-            45% {
-                opacity: 0.7;
-                text-shadow: 0 0 8px rgba(255, 20, 147, 0.5);
-            }
-            50% {
-                opacity: 0.3;
-                text-shadow: 0 0 4px rgba(255, 20, 147, 0.4);
-            }
-            65% {
-                opacity: 0.9;
-                text-shadow: 0 0 10px rgba(255, 20, 147, 0.5);
-            }
-            75% {
-                opacity: 0.6;
-                text-shadow: 0 0 8px rgba(255, 20, 147, 0.4);
+                transform: scale(0.95);
             }
             100% {
                 opacity: 1;
-                text-shadow:
-                    0 0 10px rgba(255, 20, 147, 0.6),
-                    0 0 25px rgba(255, 20, 147, 0.3);
+                transform: scale(1);
+                text-shadow: 0 0 40px rgba(255, 20, 147, 0.3);
             }
         }
 
-        .winner-name.pulse {
-            animation: winnerPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes winnerPulse {
-            0%, 100% {
-                text-shadow:
-                    0 0 10px rgba(255, 20, 147, 0.6),
-                    0 0 25px rgba(255, 20, 147, 0.3);
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
             }
-            50% {
-                text-shadow:
-                    0 0 15px rgba(255, 20, 147, 0.7),
-                    0 0 35px rgba(255, 20, 147, 0.4);
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
 
         .winner-details {
-            color: #888;
+            color: var(--text-secondary);
             font-size: 1rem;
-            letter-spacing: 2px;
             opacity: 0;
-            animation: detailsFadeIn 0.5s ease 2.3s forwards;
-        }
-
-        @keyframes detailsFadeIn {
-            to { opacity: 1; }
+            animation: fadeInUp 0.5s ease 0.8s forwards;
         }
 
         .winner-buttons {
             margin-top: 40px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
             opacity: 0;
-            animation: buttonsFadeIn 0.5s ease 2.5s forwards;
-        }
-
-        @keyframes buttonsFadeIn {
-            to { opacity: 1; }
-        }
-
-        /* Japanese decorative elements */
-        .japanese-decor {
-            position: absolute;
-            font-size: 3rem;
-            opacity: 0.15;
-            color: var(--neon-orange);
-            text-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
-            pointer-events: none;
-        }
-
-        .japanese-decor.top-left {
-            top: 10%;
-            left: 10%;
-        }
-
-        .japanese-decor.top-right {
-            top: 10%;
-            right: 10%;
-        }
-
-        .japanese-decor.bottom-left {
-            bottom: 10%;
-            left: 10%;
-        }
-
-        .japanese-decor.bottom-right {
-            bottom: 10%;
-            right: 10%;
+            animation: fadeInUp 0.5s ease 1s forwards;
         }
 
         /* ========== PLAYER TRANSITION OVERLAY ========== */
@@ -660,7 +746,6 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: var(--dark-bg);
             z-index: 1500;
             display: none;
             justify-content: center;
@@ -668,7 +753,6 @@
             flex-direction: column;
         }
 
-        /* Brighter alley background for player transition */
         .player-transition::before {
             content: '';
             position: absolute;
@@ -676,126 +760,79 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('alley.png') center center / cover no-repeat;
-            opacity: 0.5;
+            background: var(--bg-primary);
             z-index: -1;
         }
 
         .player-transition.active {
             display: flex;
+            animation: fadeIn 0.3s ease;
         }
 
-        .player-transition.josh-tint {
-            background: transparent;
+        .player-transition.player1-tint::before {
+            background:
+                radial-gradient(ellipse at center, rgba(255, 20, 147, 0.1) 0%, transparent 60%),
+                var(--bg-primary);
         }
 
-        .player-transition.josh-tint::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(ellipse at center, rgba(77, 217, 232, 0.15) 0%, rgba(0,0,0,0.7) 70%);
-            z-index: -1;
+        .player-transition.player2-tint::before {
+            background:
+                radial-gradient(ellipse at center, rgba(77, 217, 232, 0.1) 0%, transparent 60%),
+                var(--bg-primary);
         }
 
-        .player-transition.lauren-tint {
-            background: transparent;
+        .transition-content {
+            text-align: center;
+            opacity: 0;
+            animation: fadeInScale 0.4s ease forwards;
         }
 
-        .player-transition.lauren-tint::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(ellipse at center, rgba(255, 20, 147, 0.15) 0%, rgba(0,0,0,0.7) 70%);
-            z-index: -1;
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .transition-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 12px;
         }
 
         .transition-text {
-            font-size: 3rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 5px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
         }
 
-        .transition-text.flicker-off {
-            animation: neonFlickerOff 0.6s ease-out forwards;
+        .transition-text.player1 {
+            color: var(--player1-color);
         }
 
-        .transition-text.flicker-on {
-            animation: neonFlickerOnFast 0.8s ease-out forwards;
-        }
-
-        @keyframes neonFlickerOff {
-            0% {
-                opacity: 1;
-                text-shadow:
-                    0 0 5px currentColor,
-                    0 0 10px currentColor,
-                    0 0 20px currentColor,
-                    0 0 40px currentColor;
-            }
-            20% { opacity: 0.8; }
-            40% { opacity: 0.4; }
-            50% { opacity: 0.6; }
-            70% { opacity: 0.2; }
-            100% {
-                opacity: 0;
-                text-shadow: none;
-            }
-        }
-
-        @keyframes neonFlickerOnFast {
-            0% {
-                opacity: 0;
-                text-shadow: none;
-            }
-            20% {
-                opacity: 0.4;
-                text-shadow: 0 0 5px currentColor;
-            }
-            30% {
-                opacity: 0.1;
-            }
-            50% {
-                opacity: 0.7;
-                text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
-            }
-            60% {
-                opacity: 0.4;
-            }
-            80% {
-                opacity: 0.9;
-            }
-            100% {
-                opacity: 1;
-                text-shadow:
-                    0 0 5px currentColor,
-                    0 0 10px currentColor,
-                    0 0 20px currentColor,
-                    0 0 40px currentColor,
-                    0 0 80px currentColor;
-            }
+        .transition-text.player2 {
+            color: var(--player2-color);
         }
 
         /* ========== RESPONSIVE ADJUSTMENTS ========== */
         @media (max-width: 399px) {
             .restaurant-grid {
-                grid-template-columns: repeat(2, 1fr);
                 gap: 10px;
             }
 
             .restaurant-card {
-                padding: 15px 12px;
+                padding: 14px 12px;
                 min-height: 130px;
             }
 
-            .restaurant-cuisine {
-                font-size: 1rem;
+            .cuisine-icon {
+                font-size: 1.25rem;
             }
 
             .restaurant-name {
@@ -803,7 +840,17 @@
             }
 
             .player-name-large {
-                font-size: 2rem;
+                font-size: 1.75rem;
+            }
+
+            .winner-name {
+                font-size: 1.875rem;
+            }
+
+            .confirm-section {
+                left: 12px;
+                right: 12px;
+                bottom: 12px;
             }
         }
     </style>
@@ -812,16 +859,81 @@
     <div class="container">
         <!-- ========== HEADER ========== -->
         <header>
-            <h1>What to Eat?</h1>
-            <p class="subtitle">The Ultimate Takeout Decider</p>
+            <h1>Dinner Decider</h1>
+            <p class="subtitle">Because choosing dinner shouldn't take an hour</p>
         </header>
 
-        <!-- ========== START SCREEN ========== -->
-        <div id="start-screen" class="screen active">
-            <div class="start-buttons">
-                <button class="btn btn-primary" onclick="startGame()">
-                    Start New Game
+        <!-- ========== INSTRUCTIONS SCREEN ========== -->
+        <div id="instructions-screen" class="screen active">
+            <div class="instructions-card">
+                <h2 class="instructions-title">How to Play</h2>
+                <ol class="instructions-list">
+                    <li>
+                        <span class="step-number">1</span>
+                        <span>Enter your location to find nearby restaurants</span>
+                    </li>
+                    <li>
+                        <span class="step-number">2</span>
+                        <span>Player 1 picks 5 restaurants from the list</span>
+                    </li>
+                    <li>
+                        <span class="step-number">3</span>
+                        <span>Player 2 narrows it down to 2 choices</span>
+                    </li>
+                    <li>
+                        <span class="step-number">4</span>
+                        <span>Player 1 picks the winner from those 2</span>
+                    </li>
+                </ol>
+                <button class="btn btn-primary instructions-button" onclick="showLocationScreen()">
+                    Let's Go
                 </button>
+            </div>
+        </div>
+
+        <!-- ========== LOCATION SCREEN ========== -->
+        <div id="location-screen" class="screen">
+            <div class="location-form">
+                <div class="form-group">
+                    <label class="form-label">Enter Your Location</label>
+                    <input
+                        type="text"
+                        id="location-input"
+                        class="location-input"
+                        placeholder="Zip code or address"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Search Radius
+                        <span class="slider-value" id="distance-value">5 miles</span>
+                    </label>
+                    <div class="slider-container">
+                        <input
+                            type="range"
+                            id="distance-slider"
+                            class="distance-slider"
+                            min="1"
+                            max="25"
+                            value="5"
+                            oninput="updateSliderValue(this)"
+                        >
+                        <div class="slider-labels">
+                            <span>1 mi</span>
+                            <span>25 mi</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="error-message" id="error-message"></div>
+
+                <div class="location-buttons">
+                    <button class="btn btn-primary" id="find-restaurants-btn" onclick="findRestaurants()">
+                        Find Restaurants
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -839,21 +951,18 @@
 
         <!-- ========== WINNER SCREEN ========== -->
         <div id="winner-screen" class="screen">
-            <div class="japanese-decor top-left">居</div>
-            <div class="japanese-decor top-right">酒</div>
-            <div class="japanese-decor bottom-left">屋</div>
-            <div class="japanese-decor bottom-right">食</div>
             <div class="winner-card">
+                <div class="winner-icon" id="winner-icon"></div>
                 <div class="winner-label">Tonight You're Eating At</div>
                 <div class="winner-name" id="winner-name"></div>
                 <div class="winner-details" id="winner-details"></div>
             </div>
             <div class="winner-buttons">
-                <button class="btn btn-primary" onclick="startGame()">
+                <button class="btn btn-primary" onclick="playAgain()">
                     Play Again
                 </button>
-                <button class="btn btn-secondary" onclick="showStartScreen()">
-                    Home
+                <button class="btn btn-ghost" onclick="showInstructionsScreen()">
+                    Back to Start
                 </button>
             </div>
         </div>
@@ -861,7 +970,7 @@
     </div>
 
     <!-- ========== CONFIRM SELECTION BUTTON ========== -->
-    <div class="confirm-section" id="confirm-section">
+    <div class="confirm-section hidden" id="confirm-section">
         <div class="selection-status" id="selection-status">0 of 5 selected</div>
         <button class="btn btn-primary" id="confirm-btn" onclick="confirmSelection()" disabled>
             Confirm Selection
@@ -870,68 +979,168 @@
 
     <!-- ========== PLAYER TRANSITION OVERLAY ========== -->
     <div class="player-transition" id="player-transition">
-        <div class="transition-text" id="transition-text"></div>
+        <div class="transition-content">
+            <div class="transition-label">Next Turn</div>
+            <div class="transition-text" id="transition-text"></div>
+        </div>
     </div>
 
     <script>
         /* ==========================================================
-           JAVASCRIPT - Neon Izakaya Theme Game Logic
+           JAVASCRIPT - Dinner Decider Game Logic
            ========================================================== */
 
-        // ========== DEFAULT RESTAURANT DATA ==========
-        const DEFAULT_RESTAURANTS = [
-            // Alameda restaurants
-            { name: "Bhan Mae Vane", cuisine: "Thai / Lao", location: "Alameda" },
-            { name: "The Star on Park", cuisine: "Pizza", location: "Alameda" },
-            { name: "Pizzeria Pappo", cuisine: "Pizza", location: "Alameda" },
-            { name: "Mountain Mike's Pizza", cuisine: "Pizza", location: "Alameda" },
-            { name: "Pasta Pelican", cuisine: "Italian", location: "Alameda" },
-            { name: "Cholita Linda", cuisine: "Latin American", location: "Alameda" },
-            { name: "Sidestreet Pho", cuisine: "Vietnamese", location: "Alameda" },
-            { name: "Little Joe's Express", cuisine: "Chinese", location: "Alameda" },
-            { name: "Hong Kong City Restaurant", cuisine: "Chinese", location: "Alameda" },
-            { name: "Marugame Udon", cuisine: "Japanese", location: "Alameda" },
-            { name: "Southern Comfort Kitchen", cuisine: "Southern / American", location: "Alameda" },
-            { name: "Taco Fino Express", cuisine: "Mexican", location: "Alameda" },
-            { name: "Jollibee", cuisine: "Filipino Fast Food", location: "Alameda" },
-            { name: "La Val's Pizza", cuisine: "Pizza", location: "Alameda" },
-            { name: "Sachi Sushi", cuisine: "Sushi / Japanese", location: "Alameda" },
-            { name: "Calafia Taqueria", cuisine: "Mexican", location: "Alameda" },
-            { name: "Pho Nation Express", cuisine: "Vietnamese", location: "Alameda" },
-            { name: "Kokolo Donburi & Grill", cuisine: "Japanese", location: "Alameda" },
-            // Oakland restaurants
-            { name: "Zachary's Chicago Pizza", cuisine: "Deep-Dish Pizza", location: "Oakland" },
-            { name: "Homeroom", cuisine: "American (Mac & Cheese)", location: "Oakland" },
-            { name: "Belotti Bottega", cuisine: "Italian", location: "Oakland" },
-            { name: "Mesa Maguey", cuisine: "Oaxacan Mexican", location: "Oakland" },
-            { name: "Smokin Woods BBQ", cuisine: "Barbecue", location: "Oakland" },
-            { name: "Limón", cuisine: "Peruvian", location: "Oakland" },
-            { name: "Kitava", cuisine: "Health-Focused / Paleo", location: "Oakland" },
-            { name: "To the Moon", cuisine: "Korean-Inspired", location: "Oakland" },
-            { name: "Daytrip Counter", cuisine: "Rotisserie Chicken / American", location: "Oakland" },
-            { name: "alaMar Dominican Kitchen", cuisine: "Dominican / Caribbean", location: "Oakland" },
-            { name: "Saturn Cafe", cuisine: "Vegetarian / Vegan", location: "Oakland" },
-            { name: "Curry Up Now", cuisine: "Indian Street Food", location: "Oakland" },
-            { name: "Hummus Republic", cuisine: "Mediterranean", location: "Oakland" },
-            { name: "Happy Burrito", cuisine: "Mexican", location: "Oakland" },
-            { name: "Maya Halal Taqueria", cuisine: "Halal Mexican", location: "Oakland" },
-            { name: "Shan Dong", cuisine: "Chinese", location: "Oakland" },
-            { name: "Pho Vy", cuisine: "Vietnamese", location: "Oakland" },
-            { name: "Bangkok Garden", cuisine: "Thai", location: "Oakland" },
-            { name: "Firebrand Artisan Breads", cuisine: "Bakery / Sandwiches", location: "Oakland" },
-            { name: "TrueBurger", cuisine: "Burgers", location: "Oakland" }
+        // ========== CUISINE ICON & COLOR MAPPING ==========
+        const CUISINE_DATA = {
+            // Pizza & Italian
+            'pizza': { icon: '🍕', type: 'italian' },
+            'italian': { icon: '🍝', type: 'italian' },
+            'pasta': { icon: '🍝', type: 'italian' },
+
+            // Japanese
+            'japanese': { icon: '🍱', type: 'japanese' },
+            'sushi': { icon: '🍣', type: 'japanese' },
+            'ramen': { icon: '🍜', type: 'japanese' },
+            'udon': { icon: '🍜', type: 'japanese' },
+            'donburi': { icon: '🍚', type: 'japanese' },
+
+            // Chinese
+            'chinese': { icon: '🥢', type: 'chinese' },
+            'dim sum': { icon: '🥟', type: 'chinese' },
+            'dumplings': { icon: '🥟', type: 'chinese' },
+
+            // Mexican & Latin
+            'mexican': { icon: '🌮', type: 'mexican' },
+            'taqueria': { icon: '🌮', type: 'mexican' },
+            'latin': { icon: '🌮', type: 'mexican' },
+            'latin american': { icon: '🌮', type: 'mexican' },
+            'oaxacan': { icon: '🌮', type: 'mexican' },
+            'peruvian': { icon: '🥘', type: 'mexican' },
+            'dominican': { icon: '🍖', type: 'caribbean' },
+            'caribbean': { icon: '🍖', type: 'caribbean' },
+
+            // Thai
+            'thai': { icon: '🍜', type: 'thai' },
+            'lao': { icon: '🍜', type: 'thai' },
+
+            // Vietnamese
+            'vietnamese': { icon: '🍲', type: 'vietnamese' },
+            'pho': { icon: '🍲', type: 'vietnamese' },
+
+            // American
+            'american': { icon: '🍔', type: 'american' },
+            'burger': { icon: '🍔', type: 'american' },
+            'burgers': { icon: '🍔', type: 'american' },
+            'mac': { icon: '🧀', type: 'american' },
+            'sandwich': { icon: '🥪', type: 'american' },
+            'sandwiches': { icon: '🥪', type: 'american' },
+            'bakery': { icon: '🥖', type: 'american' },
+            'fast food': { icon: '🍟', type: 'american' },
+
+            // BBQ & Southern
+            'bbq': { icon: '🍖', type: 'bbq' },
+            'barbecue': { icon: '🍖', type: 'bbq' },
+            'southern': { icon: '🍗', type: 'bbq' },
+            'comfort': { icon: '🍗', type: 'bbq' },
+            'chicken': { icon: '🍗', type: 'bbq' },
+            'rotisserie': { icon: '🍗', type: 'bbq' },
+            'filipino': { icon: '🍗', type: 'bbq' },
+
+            // Mediterranean & Middle Eastern
+            'mediterranean': { icon: '🥙', type: 'mediterranean' },
+            'greek': { icon: '🥙', type: 'mediterranean' },
+            'middle eastern': { icon: '🧆', type: 'mediterranean' },
+            'hummus': { icon: '🧆', type: 'mediterranean' },
+            'halal': { icon: '🥙', type: 'mediterranean' },
+
+            // Indian
+            'indian': { icon: '🍛', type: 'indian' },
+            'curry': { icon: '🍛', type: 'indian' },
+
+            // Korean
+            'korean': { icon: '🍜', type: 'korean' },
+
+            // Health & Specialty
+            'vegetarian': { icon: '🥗', type: 'mediterranean' },
+            'vegan': { icon: '🥗', type: 'mediterranean' },
+            'health': { icon: '🥗', type: 'mediterranean' },
+            'paleo': { icon: '🥗', type: 'mediterranean' },
+
+            // Default
+            'restaurant': { icon: '🍽️', type: 'default' },
+            'food': { icon: '🍽️', type: 'default' },
+        };
+
+        function getCuisineData(cuisineStr) {
+            const cuisine = cuisineStr.toLowerCase();
+
+            // Check for exact matches first
+            if (CUISINE_DATA[cuisine]) {
+                return CUISINE_DATA[cuisine];
+            }
+
+            // Check for partial matches
+            for (const [key, data] of Object.entries(CUISINE_DATA)) {
+                if (cuisine.includes(key) || key.includes(cuisine)) {
+                    return data;
+                }
+            }
+
+            // Default
+            return { icon: '🍽️', type: 'default' };
+        }
+
+        // ========== DEMO RESTAURANT DATA ==========
+        const DEMO_RESTAURANTS = [
+            { name: "Pizzeria Napoli", cuisine: "Pizza", location: "Downtown" },
+            { name: "Sakura House", cuisine: "Japanese", location: "Midtown" },
+            { name: "Taqueria El Sol", cuisine: "Mexican", location: "West Side" },
+            { name: "Golden Dragon", cuisine: "Chinese", location: "Chinatown" },
+            { name: "Thai Orchid", cuisine: "Thai", location: "East Village" },
+            { name: "Pho 99", cuisine: "Vietnamese", location: "Little Saigon" },
+            { name: "The Burger Joint", cuisine: "American", location: "Main Street" },
+            { name: "Smokey's BBQ", cuisine: "Barbecue", location: "South Side" },
+            { name: "Bella Italia", cuisine: "Italian", location: "North End" },
+            { name: "Sushi Master", cuisine: "Sushi", location: "Harbor District" },
+            { name: "Curry Palace", cuisine: "Indian", location: "Spice Row" },
+            { name: "Seoul Kitchen", cuisine: "Korean", location: "K-Town" },
+            { name: "Mediterranean Grill", cuisine: "Mediterranean", location: "Old Town" },
+            { name: "Dim Sum Palace", cuisine: "Dim Sum", location: "Chinatown" },
+            { name: "Ramen Shop", cuisine: "Ramen", location: "Arts District" },
+            { name: "Taco Truck", cuisine: "Mexican", location: "Food Truck Park" },
+            { name: "Greek Corner", cuisine: "Greek", location: "University Ave" },
+            { name: "Southern Comfort", cuisine: "Southern", location: "Downtown" },
+            { name: "Veggie Delight", cuisine: "Vegetarian", location: "Green District" },
+            { name: "Fish & Chips", cuisine: "British", location: "Waterfront" }
         ];
 
         // ========== GAME STATE ==========
-        let restaurants = [...DEFAULT_RESTAURANTS];
+        let restaurants = [];
         let gameRestaurants = [];
         let currentPhase = 0;
         let player1 = "";
         let player2 = "";
         let currentPlayer = "";
+        let currentPlayerNum = 1;
         let selectedRestaurants = [];
         let phase1Selections = [];
         let phase2Selections = [];
+
+        // ========== SLIDER UPDATE ==========
+        function updateSliderValue(slider) {
+            const value = slider.value;
+            document.getElementById('distance-value').textContent = `${value} mile${value > 1 ? 's' : ''}`;
+            const percent = ((value - 1) / 24) * 100;
+            slider.style.setProperty('--slider-percent', `${percent}%`);
+        }
+
+        // Initialize slider on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const slider = document.getElementById('distance-slider');
+            if (slider) {
+                updateSliderValue(slider);
+            }
+        });
 
         // ========== SCREEN NAVIGATION ==========
         function showScreen(screenId) {
@@ -946,52 +1155,120 @@
             }
         }
 
-        function showStartScreen() {
-            showScreen('start-screen');
+        function showInstructionsScreen() {
+            showScreen('instructions-screen');
+        }
+
+        function showLocationScreen() {
+            showScreen('location-screen');
+            hideError();
+        }
+
+        function playAgain() {
+            showScreen('location-screen');
+            hideError();
+            // Clear the input for a fresh start
+            document.getElementById('location-input').value = '';
+        }
+
+        function startDemo() {
+            restaurants = [...DEMO_RESTAURANTS];
+            startGame();
+        }
+
+        // ========== ERROR HANDLING ==========
+        function showError(message) {
+            const errorEl = document.getElementById('error-message');
+            errorEl.textContent = message;
+            errorEl.classList.add('visible');
+        }
+
+        function hideError() {
+            const errorEl = document.getElementById('error-message');
+            errorEl.classList.remove('visible');
+        }
+
+        // ========== API INTEGRATION ==========
+        async function findRestaurants() {
+            const location = document.getElementById('location-input').value.trim();
+            const distanceMiles = parseInt(document.getElementById('distance-slider').value);
+            const btn = document.getElementById('find-restaurants-btn');
+
+            if (!location) {
+                showError('Please enter a location (zip code or address)');
+                return;
+            }
+
+            const radiusMeters = Math.round(distanceMiles * 1609.34);
+
+            btn.classList.add('loading');
+            btn.textContent = 'Searching';
+            hideError();
+
+            try {
+                const response = await fetch(`/api/restaurants?location=${encodeURIComponent(location)}&radius=${radiusMeters}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to fetch restaurants');
+                }
+
+                if (!data.restaurants || data.restaurants.length === 0) {
+                    showError('No restaurants found in this area. Please try a different location or expand your search radius.');
+                    btn.classList.remove('loading');
+                    btn.textContent = 'Find Restaurants';
+                    return;
+                }
+
+                restaurants = data.restaurants;
+                startGame();
+
+            } catch (error) {
+                console.error('Error fetching restaurants:', error);
+                showError(`Could not find restaurants. Please check your location and try again.`);
+            } finally {
+                btn.classList.remove('loading');
+                btn.textContent = 'Find Restaurants';
+            }
         }
 
         // ========== PLAYER TRANSITION ANIMATION ==========
-        function showPlayerTransition(oldPlayer, newPlayer, callback) {
+        function showPlayerTransition(oldPlayerNum, newPlayerNum, callback) {
             const overlay = document.getElementById('player-transition');
             const text = document.getElementById('transition-text');
+            const content = overlay.querySelector('.transition-content');
 
-            // Set initial player and color
-            text.textContent = oldPlayer;
-            text.style.color = oldPlayer === 'Josh' ? 'var(--josh-color)' : 'var(--lauren-color)';
-            overlay.className = 'player-transition active ' + (oldPlayer === 'Josh' ? 'josh-tint' : 'lauren-tint');
+            // Set new player
+            const newPlayerName = `Player ${newPlayerNum}`;
+            text.textContent = newPlayerName;
+            text.className = `transition-text player${newPlayerNum}`;
+            overlay.className = `player-transition active player${newPlayerNum}-tint`;
 
-            // Flicker off animation
-            text.className = 'transition-text flicker-off';
+            // Reset animation
+            content.style.animation = 'none';
+            content.offsetHeight; // Trigger reflow
+            content.style.animation = 'fadeInScale 0.4s ease forwards';
 
             setTimeout(() => {
-                // Switch to new player
-                text.textContent = newPlayer;
-                text.style.color = newPlayer === 'Josh' ? 'var(--josh-color)' : 'var(--lauren-color)';
-                overlay.className = 'player-transition active ' + (newPlayer === 'Josh' ? 'josh-tint' : 'lauren-tint');
-
-                // Flicker on animation
-                text.className = 'transition-text flicker-on';
-
-                setTimeout(() => {
-                    overlay.classList.remove('active');
-                    text.className = 'transition-text';
-                    if (callback) callback();
-                }, 1000);
-            }, 700);
+                overlay.classList.remove('active');
+                if (callback) callback();
+            }, 1200);
         }
 
         // ========== GAME LOGIC ==========
         function startGame() {
             // Randomly pick who goes first
             if (Math.random() < 0.5) {
-                player1 = "Lauren";
-                player2 = "Josh";
+                player1 = "Player 1";
+                player2 = "Player 2";
+                currentPlayerNum = 1;
             } else {
-                player1 = "Josh";
-                player2 = "Lauren";
+                player1 = "Player 2";
+                player2 = "Player 1";
+                currentPlayerNum = 2;
             }
 
-            // Randomly select 20 restaurants
+            // Randomly select 20 restaurants (or all if fewer than 20)
             const shuffled = [...restaurants].sort(() => Math.random() - 0.5);
             gameRestaurants = shuffled.slice(0, Math.min(20, shuffled.length));
 
@@ -1010,7 +1287,7 @@
             // Update player display
             const playerDisplay = document.getElementById('player-name-display');
             playerDisplay.textContent = currentPlayer;
-            playerDisplay.className = 'player-name-large ' + currentPlayer.toLowerCase();
+            playerDisplay.className = `player-name-large player${currentPlayerNum}`;
 
             // Determine what to show based on phase
             let restaurantsToShow = [];
@@ -1020,15 +1297,15 @@
             if (currentPhase === 0) {
                 restaurantsToShow = gameRestaurants;
                 requiredSelections = 5;
-                phaseText = "Pick 5";
+                phaseText = "Pick 5 restaurants";
             } else if (currentPhase === 1) {
                 restaurantsToShow = phase1Selections;
                 requiredSelections = 2;
-                phaseText = "Pick 2";
+                phaseText = "Narrow it down to 2";
             } else if (currentPhase === 2) {
                 restaurantsToShow = phase2Selections;
                 requiredSelections = 1;
-                phaseText = "Pick the Winner";
+                phaseText = "Pick the winner";
             }
 
             document.getElementById('phase-indicator').textContent = phaseText;
@@ -1044,27 +1321,31 @@
             confirmBtn.disabled = !isComplete;
             confirmBtn.textContent = currentPhase === 2 ? "Reveal Winner" : "Confirm Selection";
 
-            // Render restaurant cards with new hierarchy
+            // Render restaurant cards with icons and colors
             const grid = document.getElementById('restaurant-grid');
             grid.innerHTML = restaurantsToShow.map((r, index) => {
                 const isSelected = selectedRestaurants.includes(index);
                 const isDisabled = !isSelected && selectedRestaurants.length >= requiredSelections;
+                const cuisineData = getCuisineData(r.cuisine);
+
                 return `
                     <div class="restaurant-card ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}"
+                         data-cuisine-type="${cuisineData.type}"
                          onclick="toggleSelection(${index}, ${requiredSelections})">
-                        <div class="restaurant-cuisine">${r.cuisine}</div>
+                        <div class="cuisine-icon">${cuisineData.icon}</div>
                         <div class="restaurant-name">${r.name}</div>
+                        <div class="restaurant-cuisine">${r.cuisine}</div>
                         <div class="restaurant-location">${r.location}</div>
                     </div>
                 `;
             }).join('');
 
-            // Mark cards as loaded after animation completes
+            // Mark cards as loaded after animation
             setTimeout(() => {
                 document.querySelectorAll('.restaurant-card').forEach(card => {
                     card.classList.add('loaded');
                 });
-            }, 1200);
+            }, 600);
         }
 
         function toggleSelection(index, maxSelections) {
@@ -1082,7 +1363,6 @@
                 return;
             }
 
-            // Update card states without re-rendering
             updateCardStates(maxSelections);
         }
 
@@ -1098,7 +1378,6 @@
                 card.classList.toggle('disabled', isDisabled);
             });
 
-            // Update selection status
             const selectionStatus = document.getElementById('selection-status');
             const confirmBtn = document.getElementById('confirm-btn');
 
@@ -1111,22 +1390,24 @@
         function confirmSelection() {
             if (currentPhase === 0) {
                 phase1Selections = selectedRestaurants.map(i => gameRestaurants[i]);
-                const oldPlayer = currentPlayer;
+                const oldPlayerNum = currentPlayerNum;
                 currentPlayer = player2;
+                currentPlayerNum = oldPlayerNum === 1 ? 2 : 1;
                 currentPhase = 1;
                 selectedRestaurants = [];
 
-                showPlayerTransition(oldPlayer, currentPlayer, () => {
+                showPlayerTransition(oldPlayerNum, currentPlayerNum, () => {
                     renderGame();
                 });
             } else if (currentPhase === 1) {
                 phase2Selections = selectedRestaurants.map(i => phase1Selections[i]);
-                const oldPlayer = currentPlayer;
+                const oldPlayerNum = currentPlayerNum;
                 currentPlayer = player1;
+                currentPlayerNum = oldPlayerNum === 1 ? 2 : 1;
                 currentPhase = 2;
                 selectedRestaurants = [];
 
-                showPlayerTransition(oldPlayer, currentPlayer, () => {
+                showPlayerTransition(oldPlayerNum, currentPlayerNum, () => {
                     renderGame();
                 });
             } else if (currentPhase === 2) {
@@ -1139,17 +1420,23 @@
             document.getElementById('confirm-section').classList.add('hidden');
             showScreen('winner-screen');
 
+            // Set winner icon
+            const cuisineData = getCuisineData(winner.cuisine);
+            const winnerIcon = document.getElementById('winner-icon');
+            winnerIcon.textContent = cuisineData.icon;
+            winnerIcon.style.animation = 'none';
+            winnerIcon.offsetHeight;
+            winnerIcon.style.animation = 'fadeInUp 0.5s ease 0.2s forwards';
+
             const winnerName = document.getElementById('winner-name');
             winnerName.textContent = winner.name;
-            winnerName.className = 'winner-name flicker';
+            // Reset animation
+            winnerName.style.animation = 'none';
+            winnerName.offsetHeight;
+            winnerName.style.animation = 'winnerReveal 0.8s ease 0.5s forwards';
 
             document.getElementById('winner-details').textContent =
                 `${winner.cuisine} • ${winner.location}`;
-
-            // After flicker animation, switch to pulse
-            setTimeout(() => {
-                winnerName.className = 'winner-name pulse';
-            }, 2000);
         }
 
     </script>
