@@ -902,6 +902,7 @@
                         class="location-input"
                         placeholder="Zip code or address"
                         autocomplete="off"
+                        onkeydown="if(event.key === 'Enter') findRestaurants()"
                     >
                 </div>
 
@@ -1257,16 +1258,10 @@
 
         // ========== GAME LOGIC ==========
         function startGame() {
-            // Randomly pick who goes first
-            if (Math.random() < 0.5) {
-                player1 = "Player 1";
-                player2 = "Player 2";
-                currentPlayerNum = 1;
-            } else {
-                player1 = "Player 2";
-                player2 = "Player 1";
-                currentPlayerNum = 2;
-            }
+            // Player 1 always goes first
+            player1 = "Player 1";
+            player2 = "Player 2";
+            currentPlayerNum = 1;
 
             // Randomly select 20 restaurants (or all if fewer than 20)
             const shuffled = [...restaurants].sort(() => Math.random() - 0.5);
