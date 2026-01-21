@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     'liquor_store', 'convenience_store', 'grocery_or_supermarket'
   ];
 
-  // Cuisine keywords to look for in restaurant names
+  // Cuisine keywords to look for in restaurant names (fallback)
   const cuisineKeywords = {
     'pizza': 'Pizza',
     'pizzeria': 'Pizza',
@@ -88,7 +88,6 @@ export default async function handler(req, res) {
     'fried chicken': 'American',
     'deli': 'Deli',
     'sandwich': 'Sandwiches',
-    'sub': 'Sandwiches',
     'bakery': 'Bakery',
     'cafe': 'Cafe',
     'coffee': 'Cafe',
@@ -124,7 +123,7 @@ export default async function handler(req, res) {
       // Clean up the type: "italian_restaurant" -> "Italian"
       let cuisine = specificType
         .replace('_restaurant', '')
-        .replace('_', ' ')
+        .replace(/_/g, ' ')
         .split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
@@ -147,9 +146,21 @@ export default async function handler(req, res) {
   };
 
   try {
-    // Call Google Places API - Text Search for restaurants
+    // Step 1: Geocode the location to get coordinates
+    const geocodeResponse = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${GOOGLE_API_KEY}`
+    );
+    const geocodeData = await geocodeResponse.json();
+
+    if (geocodeData.status !== 'OK' || !geocodeData.results || !geocodeData.results[0]) {
+      return res.status(400).json({ error: 'Could not find that location. Please check the address or zip code.' });
+    }
+
+    const { lat, lng } = geocodeData.results[0].geometry.location;
+
+    // Step 2: Use Nearby Search API (returns richer cuisine type data than Text Search)
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/textsearch/json?query=restaurants+near+${encodeURIComponent(location)}&radius=${radius}&type=restaurant&key=${GOOGLE_API_KEY}`
+      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=restaurant&key=${GOOGLE_API_KEY}`
     );
 
     const data = await response.json();
