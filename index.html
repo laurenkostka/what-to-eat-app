@@ -629,6 +629,32 @@
             width: 100%;
         }
 
+        .load-more-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border-accent);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .load-more-btn:hover:not(:disabled) {
+            background: rgba(255, 20, 147, 0.1);
+            color: var(--text-primary);
+        }
+
+        .load-more-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .load-more-btn.hidden {
+            display: none;
+        }
+
         /* ========== WINNER SCREEN ========== */
         #winner-screen {
             text-align: center;
@@ -976,6 +1002,9 @@
         <button class="btn btn-primary" id="confirm-btn" onclick="confirmSelection()" disabled>
             Confirm Selection
         </button>
+        <button class="btn load-more-btn hidden" id="load-more-btn" onclick="loadMoreRestaurants()">
+            Load 10 more options
+        </button>
     </div>
 
     <!-- ========== PLAYER TRANSITION OVERLAY ========== -->
@@ -1126,6 +1155,7 @@
         let selectedRestaurants = [];
         let phase1Selections = [];
         let phase2Selections = [];
+        let nextPageToken = null;  // For loading more restaurants
 
         // ========== SLIDER UPDATE ==========
         function updateSliderValue(slider) {
@@ -1222,6 +1252,7 @@
                 }
 
                 restaurants = data.restaurants;
+                nextPageToken = data.nextPageToken || null;
                 startGame();
 
             } catch (error) {
@@ -1230,6 +1261,42 @@
             } finally {
                 btn.classList.remove('loading');
                 btn.textContent = 'Find Restaurants';
+            }
+        }
+
+        // ========== LOAD MORE RESTAURANTS ==========
+        async function loadMoreRestaurants() {
+            if (!nextPageToken) return;
+
+            const btn = document.getElementById('load-more-btn');
+            btn.textContent = 'Loading...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`/api/restaurants?pageToken=${nextPageToken}`);
+                const data = await response.json();
+
+                if (data.restaurants && data.restaurants.length > 0) {
+                    // Add new restaurants to gameRestaurants (up to 10)
+                    const newRestaurants = data.restaurants.slice(0, 10);
+                    gameRestaurants = [...gameRestaurants, ...newRestaurants];
+
+                    // Update token for next load
+                    nextPageToken = data.nextPageToken || null;
+
+                    // Re-render the game grid
+                    renderGame();
+                }
+            } catch (error) {
+                console.error('Error loading more restaurants:', error);
+            } finally {
+                btn.textContent = 'Load 10 more options';
+                btn.disabled = false;
+
+                // Hide button if no more pages available
+                if (!nextPageToken) {
+                    btn.classList.add('hidden');
+                }
             }
         }
 
@@ -1315,6 +1382,14 @@
 
             confirmBtn.disabled = !isComplete;
             confirmBtn.textContent = currentPhase === 2 ? "Reveal Winner" : "Confirm Selection";
+
+            // Show "Load More" button only in phase 0 and if more pages available
+            const loadMoreBtn = document.getElementById('load-more-btn');
+            if (currentPhase === 0 && nextPageToken) {
+                loadMoreBtn.classList.remove('hidden');
+            } else {
+                loadMoreBtn.classList.add('hidden');
+            }
 
             // Render restaurant cards with icons and colors
             const grid = document.getElementById('restaurant-grid');

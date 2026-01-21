@@ -8,9 +8,10 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const { location, radius = 8047 } = req.query; // radius in meters (default 5 miles = 8047m)
+  const { location, radius = 8047, pageToken } = req.query; // radius in meters (default 5 miles = 8047m)
 
-  if (!location) {
+  // If no location and no pageToken, error
+  if (!location && !pageToken) {
     return res.status(400).json({ error: 'Location parameter required' });
   }
 
@@ -20,14 +21,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
-  // Generic types to filter out when looking for cuisine
-  const genericTypes = [
-    'restaurant', 'food', 'point_of_interest', 'establishment',
-    'bar', 'cafe', 'meal_takeaway', 'meal_delivery', 'store',
-    'liquor_store', 'convenience_store', 'grocery_or_supermarket'
-  ];
-
-  // Cuisine keywords to look for in restaurant names (fallback)
+  // Cuisine keywords to look for in restaurant names
   const cuisineKeywords = {
     'pizza': 'Pizza',
     'pizzeria': 'Pizza',
@@ -116,54 +110,59 @@ export default async function handler(req, res) {
     const types = place.types || [];
     const name = (place.name || '').toLowerCase();
 
-    // First, check the types array for specific cuisine types
-    const specificType = types.find(type => !genericTypes.includes(type));
+    // 1. First, look for cuisine-specific types (they end with _restaurant)
+    const cuisineType = types.find(type =>
+      type.endsWith('_restaurant') && type !== 'restaurant'
+    );
 
-    if (specificType) {
-      // Clean up the type: "italian_restaurant" -> "Italian"
-      let cuisine = specificType
+    if (cuisineType) {
+      // Clean up: "italian_restaurant" -> "Italian"
+      return cuisineType
         .replace('_restaurant', '')
-        .replace(/_/g, ' ')
-        .split(' ')
+        .split('_')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
+    }
 
-      // Skip generic results like "Meal Takeaway"
-      if (!['Meal Takeaway', 'Meal Delivery', 'Night Club', 'Lodging'].includes(cuisine)) {
+    // 2. Second, check the restaurant name for cuisine keywords
+    for (const [keyword, cuisine] of Object.entries(cuisineKeywords)) {
+      if (name.includes(keyword)) {
         return cuisine;
       }
     }
 
-    // Second, check the restaurant name for cuisine keywords
-    for (const [keyword, cuisineType] of Object.entries(cuisineKeywords)) {
-      if (name.includes(keyword)) {
-        return cuisineType;
-      }
-    }
-
-    // Fallback to "Restaurant"
+    // 3. Fallback to "Restaurant"
     return 'Restaurant';
   };
 
   try {
-    // Step 1: Geocode the location to get coordinates
-    const geocodeResponse = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${GOOGLE_API_KEY}`
-    );
-    const geocodeData = await geocodeResponse.json();
+    let data;
 
-    if (geocodeData.status !== 'OK' || !geocodeData.results || !geocodeData.results[0]) {
-      return res.status(400).json({ error: 'Could not find that location. Please check the address or zip code.' });
+    // If pageToken provided, fetch next page directly (no geocoding needed)
+    if (pageToken) {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=${pageToken}&key=${GOOGLE_API_KEY}`
+      );
+      data = await response.json();
+    } else {
+      // Step 1: Geocode the location to get coordinates
+      const geocodeResponse = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${GOOGLE_API_KEY}`
+      );
+      const geocodeData = await geocodeResponse.json();
+
+      if (geocodeData.status !== 'OK' || !geocodeData.results || !geocodeData.results[0]) {
+        return res.status(400).json({ error: 'Could not find that location. Please check the address or zip code.' });
+      }
+
+      const { lat, lng } = geocodeData.results[0].geometry.location;
+
+      // Step 2: Use Nearby Search API (returns richer cuisine type data than Text Search)
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=restaurant&key=${GOOGLE_API_KEY}`
+      );
+      data = await response.json();
     }
-
-    const { lat, lng } = geocodeData.results[0].geometry.location;
-
-    // Step 2: Use Nearby Search API (returns richer cuisine type data than Text Search)
-    const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=restaurant&key=${GOOGLE_API_KEY}`
-    );
-
-    const data = await response.json();
 
     if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
       return res.status(500).json({ error: 'Google Places API error', details: data.status });
@@ -183,7 +182,10 @@ export default async function handler(req, res) {
       placeId: place.place_id
     }));
 
-    return res.status(200).json({ restaurants });
+    return res.status(200).json({
+      restaurants,
+      nextPageToken: data.next_page_token || null
+    });
 
   } catch (error) {
     console.error('Error fetching restaurants:', error);
