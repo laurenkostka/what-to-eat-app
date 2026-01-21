@@ -890,7 +890,7 @@
         </header>
 
         <!-- ========== INSTRUCTIONS SCREEN ========== -->
-        <div id="instructions-screen" class="screen active">
+        <div id="instructions-screen" class="screen">
             <div class="instructions-card">
                 <h2 class="instructions-title">How to Play</h2>
                 <ol class="instructions-list">
@@ -918,7 +918,7 @@
         </div>
 
         <!-- ========== LOCATION SCREEN ========== -->
-        <div id="location-screen" class="screen">
+        <div id="location-screen" class="screen active">
             <div class="location-form">
                 <div class="form-group">
                     <label class="form-label">Enter Your Location</label>
@@ -988,7 +988,7 @@
                 <button class="btn btn-primary" onclick="playAgain()">
                     Play Again
                 </button>
-                <button class="btn btn-ghost" onclick="showInstructionsScreen()">
+                <button class="btn btn-ghost" onclick="showLocationScreen()">
                     Back to Start
                 </button>
             </div>
@@ -1145,8 +1145,8 @@
         ];
 
         // ========== GAME STATE ==========
-        let restaurants = [];
-        let gameRestaurants = [];
+        let restaurants = [];       // All restaurants from API (shuffled)
+        let gameRestaurants = [];   // Currently displayed restaurants
         let currentPhase = 0;
         let player1 = "";
         let player2 = "";
@@ -1155,7 +1155,6 @@
         let selectedRestaurants = [];
         let phase1Selections = [];
         let phase2Selections = [];
-        let nextPageToken = null;  // For loading more restaurants
 
         // ========== SLIDER UPDATE ==========
         function updateSliderValue(slider) {
@@ -1252,7 +1251,6 @@
                 }
 
                 restaurants = data.restaurants;
-                nextPageToken = data.nextPageToken || null;
                 startGame();
 
             } catch (error) {
@@ -1265,38 +1263,14 @@
         }
 
         // ========== LOAD MORE RESTAURANTS ==========
-        async function loadMoreRestaurants() {
-            if (!nextPageToken) return;
+        function loadMoreRestaurants() {
+            // Get 10 more from the pool that aren't already shown
+            const currentCount = gameRestaurants.length;
+            const newRestaurants = restaurants.slice(currentCount, currentCount + 10);
 
-            const btn = document.getElementById('load-more-btn');
-            btn.textContent = 'Loading...';
-            btn.disabled = true;
-
-            try {
-                const response = await fetch(`/api/restaurants?pageToken=${nextPageToken}`);
-                const data = await response.json();
-
-                if (data.restaurants && data.restaurants.length > 0) {
-                    // Add new restaurants to gameRestaurants (up to 10)
-                    const newRestaurants = data.restaurants.slice(0, 10);
-                    gameRestaurants = [...gameRestaurants, ...newRestaurants];
-
-                    // Update token for next load
-                    nextPageToken = data.nextPageToken || null;
-
-                    // Re-render the game grid
-                    renderGame();
-                }
-            } catch (error) {
-                console.error('Error loading more restaurants:', error);
-            } finally {
-                btn.textContent = 'Load 10 more options';
-                btn.disabled = false;
-
-                // Hide button if no more pages available
-                if (!nextPageToken) {
-                    btn.classList.add('hidden');
-                }
+            if (newRestaurants.length > 0) {
+                gameRestaurants = [...gameRestaurants, ...newRestaurants];
+                renderGame();
             }
         }
 
@@ -1330,9 +1304,8 @@
             player2 = "Player 2";
             currentPlayerNum = 1;
 
-            // Randomly select 20 restaurants (or all if fewer than 20)
-            const shuffled = [...restaurants].sort(() => Math.random() - 0.5);
-            gameRestaurants = shuffled.slice(0, Math.min(20, shuffled.length));
+            // Show first 20 restaurants (already shuffled by API)
+            gameRestaurants = restaurants.slice(0, Math.min(20, restaurants.length));
 
             // Reset game state
             currentPhase = 0;
@@ -1383,9 +1356,10 @@
             confirmBtn.disabled = !isComplete;
             confirmBtn.textContent = currentPhase === 2 ? "Reveal Winner" : "Confirm Selection";
 
-            // Show "Load More" button only in phase 0 and if more pages available
+            // Show "Load More" button only in phase 0 and if more restaurants available
             const loadMoreBtn = document.getElementById('load-more-btn');
-            if (currentPhase === 0 && nextPageToken) {
+            const hasMoreRestaurants = currentPhase === 0 && gameRestaurants.length < restaurants.length;
+            if (hasMoreRestaurants) {
                 loadMoreBtn.classList.remove('hidden');
             } else {
                 loadMoreBtn.classList.add('hidden');
